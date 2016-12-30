@@ -3,34 +3,26 @@ package com.kkbox.sqa.clippy;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.hardware.display.DisplayManager;
-import android.hardware.display.VirtualDisplay;
-import android.media.MediaRecorder;
-import android.media.projection.MediaProjection;
+import android.content.pm.PackageManager;
 import android.media.projection.MediaProjectionManager;
-import android.net.wifi.WifiManager;
-import android.os.Environment;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.widget.CompoundButton;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
-import junit.framework.Assert;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
-
-    private MediaProjection mMediaProjection;
-    private MediaProjectionManager mMediaProjectionManager;
-    private MediaRecorder mMediaRecorder;
     private int mHeight;
     private int mWidth;
     private int mScreenDensity;
-    private ToggleButton mToggleButton;
-    private VirtualDisplay mVirtualDisplay;
-
     private static final int REQUEST_MEDIA_PROJECTION = 1;
     private static final String TAG = "ScreenRecorder";
 
@@ -39,114 +31,105 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        try {
-            initRecorder();
-        } catch (Exception e) {
-            Assert.fail(e.getMessage());
-        }
+        initDeviceInfo();
 
-        mToggleButton = (ToggleButton) findViewById(R.id.toggleButton);
-        mToggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    startRecorder();
-
-                    enableWifi();
-                } else {
-                    stopRecorder();
-                }
-            }
-        });
+        handleIntent(getIntent());
     }
 
-    private void enableWifi() {
-        WifiManager wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        wifi.setWifiEnabled(true);
+    @Override
+    public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        handleIntent(intent);
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_MEDIA_PROJECTION) {
             if (resultCode != Activity.RESULT_OK) {
-                Log.i(TAG, "### Permission refused ###");
-                Toast.makeText(this, "User cancelled!", Toast.LENGTH_SHORT).show();
-                mToggleButton.setChecked(false);
+                Toast.makeText(this, "必須同意才能啟動錄影", Toast.LENGTH_SHORT).show();
 
                 return;
             }
 
-            Log.i(TAG, "### Permission granted ###");
-            mMediaProjection = mMediaProjectionManager.getMediaProjection(resultCode, data);
+            if (resultCode == Activity.RESULT_OK) {
+                initDisplayMetrics();
 
-            setUpVirtualDisplay();
+                Intent recorder = new Intent(this, RecorderService.class);
+                recorder.putExtra("resultCode", resultCode);
+                recorder.putExtra("data", data);
+                recorder.putExtra("width", mWidth);
+                recorder.putExtra("height", mHeight);
+                recorder.putExtra("density", mScreenDensity);
 
-            Log.i(TAG, "### Staring recorder ###");
-            mMediaRecorder.start();
+                Log.i(TAG, "Sending startService()");
+                startService(recorder);
+            }
         }
     }
 
-    private void initRecorder() throws Exception {
-        Log.i(TAG, "### Initializing recorder ###");
-        DisplayMetrics metrics = new DisplayMetrics();
-        this.getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        mHeight = metrics.heightPixels;
-        mWidth  = metrics.widthPixels;
-        mScreenDensity = metrics.densityDpi;
-        mMediaRecorder = new MediaRecorder();
-        mMediaProjectionManager = (MediaProjectionManager)
+    private void initDeviceInfo() {
+        String KKBOX_VERSION = "0";
+
+        try {
+            KKBOX_VERSION = String.valueOf(getPackageManager().getPackageInfo("com.google.android.gms", 0 ).versionCode);
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.d(TAG, e.getMessage());
+        }
+
+        String[] key = { "Manufacturer", "Brand","Model","Device", "SDK Release", "SDK Version", "KKBOX Version" };
+        String[] value = { Build.MANUFACTURER, Build.BRAND, Build.MODEL, Build.DEVICE, Build.VERSION.RELEASE, String.valueOf(Build.VERSION.SDK_INT), KKBOX_VERSION };
+
+        ListView list = (ListView) findViewById(R.id.list);
+        List<Map<String, Object>> items = new ArrayList<Map<String,Object>>();
+
+        for (int i = 0; i < key.length; i++) {
+            Map<String, Object> item = new HashMap<String, Object>();
+            item.put("key", key[i]);
+            item.put("value", value[i]);
+            items.add(item);
+        }
+
+        SimpleAdapter adapter = new SimpleAdapter(this,
+                items, R.layout.list_item, new String[]{"key", "value"},
+                new int[]{R.id.key, R.id.value});
+        list.setAdapter(adapter);
+    }
+
+    private void handleIntent(Intent intent) {
+        String action = intent.getAction();
+        String command = (intent.getDataString() == null) ? "" : intent.getDataString();
+
+        if(Intent.ACTION_RUN.equals(action) && command.equals("START")) {
+            startRecorderService();
+        }
+
+        if(Intent.ACTION_RUN.equals(action) && command.equals("STOP")) {
+            stopRecorderService();
+            finish(); // Activity is done and should be closed.
+        }
+    }
+
+    private void startRecorderService() {
+        MediaProjectionManager mMediaProjectionManager = (MediaProjectionManager)
                 this.getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
-        setupRecorder();
-    }
-
-    private void setUpVirtualDisplay() {
-        Log.i(TAG, "### Setup virtual display ###");
-        mVirtualDisplay = mMediaProjection.createVirtualDisplay("ScreenCapture",
-                mWidth, mHeight, mScreenDensity,
-                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                mMediaRecorder.getSurface(), null, null);
-    }
-
-    private void setupRecorder() throws Exception {
-        Log.i(TAG, "### Setup Audio/Video Source ###");
-        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
-        mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-
-        Log.i(TAG, "### Setup output file format ###");
-        mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        mMediaRecorder.setOutputFile(Environment.getExternalStorageDirectory() + "/monkey.mp4");
-
-        Log.i(TAG, "### Setup recorder options ###");
-        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-        mMediaRecorder.setVideoSize(mWidth, mHeight);
-        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        mMediaRecorder.setVideoEncodingBitRate(512 * 1000);
-        mMediaRecorder.setVideoFrameRate(30);
-
-        mMediaRecorder.prepare();
-    }
-
-    private void startRecorder() {
-        Log.i(TAG, "### Requesting for permission to record screen ###");
         startActivityForResult(
                 mMediaProjectionManager.createScreenCaptureIntent(),
                 REQUEST_MEDIA_PROJECTION);
     }
 
-    private void stopRecorder() {
-        if (mVirtualDisplay == null) {
-            return;
-        }
-
-        Log.i(TAG, " ### Stopping recorder ###");
-        mMediaRecorder.stop();
-        mMediaRecorder.reset();
-        mMediaRecorder.release();
-        mMediaRecorder = null;
-
-        Log.i(TAG, " ### Stopping virtual display ###");
-        mVirtualDisplay.release();
-        mVirtualDisplay = null;
+    private void stopRecorderService() {
+        Log.i(TAG, "Sending stopService()");
+        Intent service = new Intent(this, RecorderService.class);
+        stopService(service);
     }
 
+    private void initDisplayMetrics() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        this.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        mHeight = metrics.heightPixels;
+        mWidth  = metrics.widthPixels;
+        mScreenDensity = metrics.densityDpi;
+    }
 }
