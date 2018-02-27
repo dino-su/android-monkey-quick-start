@@ -4,5 +4,5 @@
  1. Screen Recorder (Video path: /sdcard/monkey.mp4)
  2. Auto Enable device Wi-Fi.
 
-## How to install
-`$ ./gradlew instalDebug`
+## CI Sample Script
+`$ ./ci.sh`
