@@ -10,7 +10,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:background="@color/background_material_light"
-    tools:context="com.kkbox.sqa.clippy.MainActivity">
+    tools:context="com.kkbox.sqa.monkey.MainActivity">
 
     <ListView
         android:id="@+id/list"

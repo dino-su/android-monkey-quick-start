@@ -4,7 +4,7 @@ android {
     compileSdkVersion 22
     buildToolsVersion '26.0.2'
     defaultConfig {
-        applicationId "com.kkbox.sqa.clippy"
+        applicationId "com.kkbox.sqa.monkey"
         minSdkVersion 21
         targetSdkVersion 22
         versionCode 1
@@ -21,9 +21,7 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    compile 'com.android.support:appcompat-v7:22.2.1'
-    testCompile 'junit:junit:4.12'
+    compile 'com.android.support:appcompat-v7:22.2.0'
+    androidTestCompile 'com.android.support.test:runner:0.3'
+    androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.3'
 }

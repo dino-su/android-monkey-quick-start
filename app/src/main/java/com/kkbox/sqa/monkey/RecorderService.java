@@ -1,4 +1,4 @@
-package com.kkbox.sqa.clippy;
+package com.kkbox.sqa.monkey;
 
 import android.app.Service;
 import android.content.Context;
