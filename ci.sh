@@ -3,13 +3,16 @@
 ## Init
 mkdir -p output/
 
-## Install Helper
-./gradlew installDebug installDebugAndroidTest
+## Install Monkey Recorder
+cd monkey-recorder && ./gradlew -q installDebug && cd -
+
+## Install Monkey Test
+cd monkey-test && ./gradlew -q installDebug installDebugAndroidTest && cd -
 
 ##  START Recording
 adb shell am start -n com.kkbox.sqa.recorder/.MainActivity -a android.intent.action.RUN -d START
 
-## Login App
+## App Precondition
 adb shell am instrument -w -e class com.kkbox.sqa.monkey.CalculatorTest#start com.kkbox.sqa.monkey.test/android.support.test.runner.AndroidJUnitRunner
 
 ## Run Monkey
