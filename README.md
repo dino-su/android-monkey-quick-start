@@ -15,3 +15,8 @@ Features:
 
 ## CI Script
 `$ ./ci.sh` or `Jenkinsfile` for Jenkins Pipeline.
+
+## Talk
+  * Test Corner #14: [Android Monkey Test](https://goo.gl/meojKm)
+
+  [![Video](https://img.youtube.com/vi/ubT9shYyZZU/0.jpg)](https://www.youtube.com/watch?v=ubT9shYyZZU&feature=youtu.be&t=60s)
