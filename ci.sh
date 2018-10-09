@@ -26,9 +26,11 @@ adb shell am start -n com.kkbox.sqa.recorder/.MainActivity -a android.intent.act
 adb shell screencap /sdcard/monkey.png
 
 ## acquiring logs
-adb bugreport > output/bugreport.log
-adb pull /sdcard/monkey.png output/monkey.png
-adb pull /sdcard/recorder.mp4 output/monkey.mp4
+cd output/
+adb bugreport > bugreport.log # Backward Compatibility (Android < 7.0)
+adb pull /sdcard/monkey.png monkey.png
+adb pull /sdcard/recorder.mp4 monkey.mp4
 
 ## export JUnit xml
+cd -
 python monkey-to-junit.py output/monkey.log > output/monkey.xml

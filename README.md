@@ -9,6 +9,9 @@ Features:
   * Bug Report
   * Export test result to JUnit xml format.
 
+(Click to watch demo video)
+[![demo video](https://img.youtube.com/vi/XB2iwI8S9Fk/0.jpg)](https://www.youtube.com/watch?v=XB2iwI8S9Fk)
+
 ## Prerequisite
   * [Android SDK](https://developer.android.com/studio/index.html#downloads)
   * [junit-xml](https://pypi.python.org/pypi/junit-xml)
@@ -19,4 +22,4 @@ Features:
 ## Talk
   * Test Corner #14: [Android Monkey Test](https://goo.gl/meojKm)
 
-  [![Video](https://img.youtube.com/vi/ubT9shYyZZU/0.jpg)](https://www.youtube.com/watch?v=ubT9shYyZZU&feature=youtu.be&t=60s)
+  [![Video](https://img.youtube.com/vi/ubT9shYyZZU/0.jpg)](https://www.youtube.com/watch?v=ubT9shYyZZU&t=60s)
